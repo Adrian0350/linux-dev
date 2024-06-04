@@ -1,0 +1,85 @@
+name: dev
+
+services:
+  ################################
+  #           ROCKY8             #
+  ################################
+  rocky:
+    container_name: rocky-linux
+    platform: linux/arm64
+    build:
+      context: .
+      dockerfile: images/distros/rocky8/Dockerfile
+      args:
+        - SSL_C=${NGINX_SSL_C}
+        - SSL_ST=${NGINX_SSL_ST}
+        - SSL_L=${NGINX_SSL_L}
+        - SSL_O=${NGINX_SSL_O}
+        - SSL_CN=${NGINX_SSL_CN}
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: '4G'
+        reservations:
+          cpus: '4.0'
+          memory: '4G'
+    volumes: 
+      - type: volume
+        source: ssh
+        target: /root/.ssh
+        read_only: true
+      - logs:/var/logs
+      - developer:/Developer
+      - nginx_conf:/etc/nginx
+      - nginx_ssl:/etc/ssl/nginx
+    ports:
+      # NGINX Ports
+      - 80:80
+      - 443:443
+    extra_hosts:
+      - docker.for.mac.host.internal:host-gateway
+    networks:
+      - pr0xy-network
+
+volumes:
+  data:        # MySQL data directory should be persistent.
+  logs:        # All system logs.
+  nginx_ssl:   # Linux SSL directory should be persistent data for the self-signed certificates.
+  mysql_conf:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${MYSQL_CONFIGURATION_PATH}
+  nginx_conf:
+      driver: local
+      driver_opts:
+        o: bind
+        type: none
+        device: ${NGINX_CONFIGURATION_PATH}
+  php_conf:
+      driver: local
+      driver_opts:
+        o: bind
+        type: none
+        device: ${PHP_CONFIGURATION_PATH}
+  # We want to use local SSH keys so any movement across containers comes from the registered user.
+  # WARNING: Bare in mind any changes from inside the container will affect your local .ssh files.
+  ssh:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${SSH_PATH}
+  # Local repository.
+  developer:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${DEVELOPER_PATH}
+
+networks:
+  pr0xy-network:
+    driver: "bridge"

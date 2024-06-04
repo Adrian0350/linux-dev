@@ -1,0 +1,10 @@
+{
+	"apps": [
+		{
+			"name": "app",
+			"script": "/pm2.yml",
+			"exec_mode": "cluster",
+			"instances": 1
+		}
+	]
+}

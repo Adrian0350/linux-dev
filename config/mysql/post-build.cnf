@@ -1,0 +1,46 @@
+[mysqld]
+user=mysql
+character-set-server=utf8
+collation-server=utf8_general_ci
+
+sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
+
+; As per documentation, modifying these variables will make database imports faster:
+; https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html
+
+innodb_flush_method=O_DIRECT
+
+; Will cache frequently read data
+innodb_buffer_pool_size=6G
+
+; Larger buffer reduces write I/O to Transaction Logs
+innodb_log_buffer_size=1G
+
+; Larger log file reduces checkpointing and write I/O
+innodb_log_file_size=1G
+
+; Service Write Operations to .ibd files.
+; According to MySQL Documentation on Configuring the Number of Background InnoDB I/O Threads,
+; each thread can handle up to 256 pending I/O requests. Default for MySQL is 4, max is 64.
+innodb_write_io_threads=64
+innodb_read_io_threads=64
+
+; innodb_flush_log_at_trx_commit:
+;	* In the event of a crash, both 0 and 2 can lose once second of data.
+;	* The tradeoff is that both 0 and 2 increase write performance.
+;	* I choose 0 over 2 because 0 flushes the InnoDB Log Buffer to the Transaction Logs (ib_logfile0, ib_logfile1) once per second,
+;	  with or without a commit. Setting 2 flushes the InnoDB Log Buffer only on commit.
+;	* There are other advantages to setting 0 mentioned by @jynus, a former Percona instructor.
+;     https://dba.stackexchange.com/questions/74433/why-is-there-no-data-loss-with-mysql-innodb-flush-log-at-trx-commit-set-to-0/74438#74438
+innodb_flush_log_at_trx_commit=0
+
+; This disables the InnoDB Double Write Buffer (and should be set to default once import has been done.)
+; by running: $ service mysql restart
+innodb_doublewrite=0
+
+max_allowed_packet=1G
+
+# Allow login without entering password.
+[client]
+user=root
+password=root
